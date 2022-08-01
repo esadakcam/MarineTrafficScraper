@@ -20,7 +20,6 @@ parser.add_argument("--lon-max", type=float,
 
 args = parser.parse_args()
 
-# scraper = Scraper(latitude=(40.83, 40.875), longitude=(29.233, 29.2923))
 scraper = Scraper(latitude=(args.lat_min, args.lat_max),
                   longitude=(args.lon_min, args.lon_max))
 sender = Sender("localhost", args.socket)
