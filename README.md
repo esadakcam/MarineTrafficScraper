@@ -1,4 +1,4 @@
-This project fetches vessel info between given longitude and latitiude from MarineTraffic. The (MinLat,MaxLat) and (MinLongi, MaxLongi) should be given as terminal argument. An example is can be seen below.
+This project fetches vessel info between given longitude and latitiude from MarineTraffic. The (MinLat,MaxLat) and (MinLongi, MaxLongi) should be given as terminal argument. An example can be seen below.
 # First time opening the project
 
 ## Install python 3.10
