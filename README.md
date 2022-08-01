@@ -1,3 +1,4 @@
+Fetches vessel info between given longitude and latitiude
 # First time opening the project
 
 ## Install python 3.10
