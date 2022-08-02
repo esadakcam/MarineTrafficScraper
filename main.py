@@ -43,7 +43,7 @@ def remove_duplicates(data: list[dict]):
     new_data: list[dict] = []
     for element in data:
         for ship in element["data"]:
-            if ship not in new_data:
+            if ship not in new_data and int(ship["MMSI"]) > 0 and int(ship["IMO"]) > 0:
                 new_data.append(ship)
     return new_data
 
