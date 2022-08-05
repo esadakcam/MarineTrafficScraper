@@ -45,3 +45,6 @@ python main.py --p 1 --lat-min 40.83 --lat-max 40.875 --lon-min 29.233 --lon-max
 python main.py --p 0 --lat-min 40.83 --lat-max 40.875 --lon-min 29.233 --lon-max 29.292
 ## To test the data transmiting over UDP while the main script is running:
 python test_receive.py
+
+# NOTE:
+If you want to fetch data using Selenium, uncomment fetch/Scrapper.py line 145
