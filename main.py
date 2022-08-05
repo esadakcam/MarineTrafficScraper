@@ -39,18 +39,9 @@ def send_data(data: list[dict]):
         time.sleep(0.1)
 
 
-def remove_duplicates(data: list[dict]):
-    new_data: list[dict] = []
-    for element in data:
-        for ship in element["data"]:
-            if ship not in new_data and int(ship["MMSI"]) > 0 and int(ship["IMO"]) > 0:
-                new_data.append(ship)
-    return new_data
-
-
 while True:
     data: list[dict] = dict()
-    data = remove_duplicates(scraper.get_ships())
+    data = scraper.get_ships()
     print(f"{len(data)} ships are fetched.")
     if mode:
         send_data(data)
