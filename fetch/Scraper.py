@@ -86,7 +86,7 @@ class Scraper:
     def __valid_ship(self, ship: dict) -> bool:
         return int(ship["MMSI"]) > 0 and int(ship["IMO"]) > 0
 
-    def __check_timestamp(func: Callable[[list[dict]], list[dict]]) -> Callable:
+    def check_timestamp(func: Callable[[list[dict]], list[dict]]) -> Callable:
         def wrapper(self, *args, **kwargs):
             ship_list: list[dict] = func(self, *args, **kwargs)
             yesterday = datetime.now() - timedelta(days=1)
@@ -122,7 +122,7 @@ class Scraper:
             if key not in toUpdate.keys():
                 toUpdate[key] = value
 
-    @__check_timestamp
+    @check_timestamp
     def __extend_ship_info(self, ship_list: list[dict]) -> list[dict]:
         session = requests.Session()
         session.headers = {
