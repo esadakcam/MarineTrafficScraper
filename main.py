@@ -40,7 +40,7 @@ def send_data(data: list[dict]):
 
 
 while True:
-    data: list[dict] = dict()
+    data: list[dict] = list()
     data = scraper.get_ships()
     print(f"{len(data)} ships are fetched.")
     if mode:
