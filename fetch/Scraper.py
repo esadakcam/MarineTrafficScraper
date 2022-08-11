@@ -23,6 +23,16 @@ class Scraper:
     requset_url_list: list[str] = field(init=False, default_factory=list[str])
 
     def __post_init__(self) -> None:
+        # MARMARA SEA
+        self.requset_url_list.append(
+            "https://www.marinetraffic.com/getData/get_data_json_4/z:9/X:147/Y:95/station:0")
+        self.requset_url_list.append(
+            "https://www.marinetraffic.com/getData/get_data_json_4/z:9/X:148/Y:95/station:0")
+        self.requset_url_list.append(
+            "https://www.marinetraffic.com/getData/get_data_json_4/z:9/X:147/Y:96/station:0")
+        self.requset_url_list.append(
+            "https://www.marinetraffic.com/getData/get_data_json_4/z:9/X:148/Y:96/station:0")
+
         self.html_url_list.append(
             f"https://www.marinetraffic.com/tr/data/?asset_type=vessels&columns=flag,shipname,photo,recognized_next_port,reported_eta,reported_destination,current_port,imo,ship_type,show_on_live_map,time_of_latest_position,area_local,lat_of_latest_position,lon_of_latest_position,navigational_status,notes,current_custom_area_in_count&lat_of_latest_position_between|range|lat_of_latest_position_between={self.latitude[0]},{self.latitude[1]}&lon_of_latest_position_between|range|lon_of_latest_position_between={self.longitude[0]},{self.longitude[1]}"
         )
@@ -72,20 +82,28 @@ class Scraper:
 
     def __get_ship_list(self) -> list[dict]:
         session = requests.Session()
-        session.headers = {
+        session.headers = {  # type: ignore
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
-            "Vessel-Image": "005bf958a6548a79c6d3a42eba493e339624"
+            "vessel-image": "005bf958a6548a79c6d3a42eba493e339624"
         }
         ship_list: list[dict] = list()
         for url in self.requset_url_list:
             response = session.get(url)
-            ship_list.extend(json.loads(response.text)["data"])
+            response_text = json.loads(response.text)["data"]
+            if type(response_text) == list:
+                ship_list.extend(response_text)
+            else:
+                ship_list.extend(response_text["rows"])
             print(str(response.status_code) + " -> ship list fetch response")
         return self.__remove_duplicates(ship_list, from_request=True)
 
-    def __valid_ship(self, ship: dict) -> bool:
-        return int(ship["MMSI"]) > 0 and int(ship["IMO"]) > 0
+    def __valid_ship(self, ship: dict[str, str]) -> bool:
 
+        if ("IMO" in ship.keys() and int(ship["IMO"]) < 0) or ("MMSI" not in ship.keys()):
+            return False
+        return not int(ship["SHIPTYPE"]) <= 0 and int(ship["MMSI"]) > 0
+
+    # type: ignore
     def check_timestamp(func: Callable[[list[dict]], list[dict]]) -> Callable:
         def wrapper(self, *args, **kwargs):
             ship_list: list[dict] = func(self, *args, **kwargs)
@@ -102,15 +120,18 @@ class Scraper:
         new_data: list[dict] = []
         if from_request:
             for ship in data:
-                if (ship not in new_data and self.__valid_ship(ship)):
+                if (ship not in new_data and self.__checkIfInsideTheMap(float(ship["LAT"]), float(ship["LON"]))):
                     new_data.append(ship)
             return new_data
 
         for element in data:
             for ship in element["data"]:
-                if (ship not in new_data and self.__valid_ship(ship)):
+                if (ship not in new_data and self.__checkIfInsideTheMap(float(ship["LAT"]), float(ship["LON"]))):
                     new_data.append(ship)
         return new_data
+
+    def __checkIfInsideTheMap(self, lat: float, lon: float) -> bool:
+        return (lat >= self.latitude[0] and lat <= self.latitude[1]) and (lon >= self.longitude[0] and lon <= self.longitude[1])
 
     @staticmethod
     def __get_ship_detail_url(ship_id: str):
@@ -122,23 +143,32 @@ class Scraper:
             if key not in toUpdate.keys():
                 toUpdate[key] = value
 
-    @check_timestamp
+    @check_timestamp  # type: ignore
     def __extend_ship_info(self, ship_list: list[dict]) -> list[dict]:
         session = requests.Session()
-        session.headers = {
+        session.headers = {  # type: ignore
             'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.3",
             'accept': "application/json, text/plain, */*",
             'referer': "https://www.marinetraffic.com/"}
         total_ship = len(ship_list)
+        extended_ship_list: list[dict] = list()
         print(f"Total {total_ship} ships to update")
         for index, ship in enumerate(ship_list):
+            if not ship["SHIP_ID"].isnumeric():
+                continue
             url = self.__get_ship_detail_url(ship["SHIP_ID"])
             response = session.get(url)
             print(
                 f"Response for ship {ship['SHIP_ID']} " + str(response.status_code) + f" {total_ship - index - 1} ships left.")
             if response.status_code == 200:
-                self.__update_ship(ship, json.loads(response.text))
-        return ship_list
+                try:
+                    self.__update_ship(ship, json.loads(response.text))
+                except:
+                    pass
+            if not self.__valid_ship(ship):
+                continue
+            extended_ship_list.append(ship)
+        return extended_ship_list
 
     def get_ships(self):
         ship_list: list[dict] = self.__get_ship_list()
