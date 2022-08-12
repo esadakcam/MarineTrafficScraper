@@ -13,7 +13,7 @@ import requests
 class Scraper:
     """
     Scrapes ship info between the given latitudes and longitudes. Since the data is being fetched using selenium,
-    the sleep time is dependendet to the your internet connection. So, It should be set accordingly.
+    the sleep time is dependent to the your internet connection. So, It should be set accordingly.
     """
 
     latitude: tuple[float, float] = field(repr=True)
