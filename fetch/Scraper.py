@@ -89,6 +89,9 @@ class Scraper:
         ship_list: list[dict] = list()
         for url in self.requset_url_list:
             response = session.get(url)
+            while(response.status_code != 200):
+                time.sleep(0.1)
+                response = session.get(url)
             response_text = json.loads(response.text)["data"]
             if type(response_text) == list:
                 ship_list.extend(response_text)
